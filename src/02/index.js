@@ -1,20 +1,38 @@
-import { createMachine } from 'xstate';
+import { createMachine, interpret } from 'xstate';
 
 const elBox = document.querySelector('#box');
 
-const machine = createMachine({
-  // Add your object machine definition here
+const feedbackMachine = createMachine({
+  initial: 'question',
+  states: {
+    question: {
+      on: {
+        GOOD: 'thanks',
+        BAD: 'form',
+      },
+    },
+    form: {
+      on: {
+        SUBMIT: 'thanks',
+      },
+    },
+    thanks: {
+      on: {
+        CLOSE: 'closed',
+      },
+    },
+    closed: { type: 'final' },
+  },
 });
 
-// Change this to the initial state
-let currentState = undefined;
+const feedbackService = interpret(feedbackMachine);
 
-function send(event) {
-  // Determine and update the `currentState`
+feedbackService.onTransition(({ value }) => {
+  elBox.dataset.state = value;
+});
 
-  elBox.dataset.state = currentState.value;
-}
+feedbackService.start();
 
 elBox.addEventListener('click', () => {
-  // Send a click event
+  feedbackService.send('GOOD');
 });
